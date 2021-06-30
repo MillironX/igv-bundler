@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Metagenomics Results</h1>
+        <select id="contigs-select" onchange='changegenome()'></select>
+        <div id="viewer"></div>
+        <!-- <script src="node_modules/igv/dist/igv.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/igv@2.8.6/dist/igv.min.js"></script>
+        <script>
+            var req = new XMLHttpRequest();
+            req.onload = reqlistener;
+            function reqlistener(e) {
+                samples = JSON.parse(this.responseText);
+                for (var i = 0; i < samples.length; i++) {
+                    var opt = document.createElement('option');
+                    sample = samples[i].slice(0,-14);
+                    opt.text = sample;
+                    opt.value = sample;
+                    document.getElementById('contigs-select').add(opt);
+                }
+            }
+            req.open('GET', '/samples', false)
+            req.send()
+            var contig_picker = document.getElementById('contigs-select');
+            var sample = contig_picker.selectedOptions[0].value;
+            igvDiv = document.getElementById('viewer');
+            options = {
+                reference: {
+                    id: sample,
+                    fastaURL: "data/"+sample+".contigs.fasta"
+                },
+                tracks:
+                [
+                    {
+                        type: 'alignment',
+                        format: 'bam',
+                        url: 'data/'+sample+'.bam',
+                        indexURL: 'data/'+sample+'.bam.bai',
+                        name: sample
+                    }
+                ]
+            }
+            igv.createBrowser(igvDiv, options).
+                then(function(browser) {
+                    igv.browser = browser;
+                });
+            function changegenome() {
+                var contig_picker = document.getElementById('contigs-select');
+                var newsample = contig_picker.selectedOptions[0].value;
+                var newopts = {
+                    reference: {
+                        id: newsample,
+                        fastaURL: "data/"+newsample+".contigs.fasta"
+                    },
+                    tracks:
+                    [
+                        {
+                            type: 'alignment',
+                            format: 'bam',
+                            url: 'data/'+newsample+'.bam',
+                            indexURL: 'data/'+newsample+'.bam.bai',
+                            name: newsample
+                        }
+                    ]
+                }
+                igv.removeAllBrowsers()
+                igv.createBrowser(igvDiv, newopts).
+                then(function(browser) {
+                    igv.browser = browser;
+                });
+            }
+        </script>
+    </body>
+</html>
