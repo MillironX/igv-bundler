@@ -9,6 +9,10 @@ app.get('/', function (req, res) {
 
 app.use('/data', express.static(__dirname + '/data'));
 
+app.get('/krona', function(req, res) {
+    res.sendFile(path.join(__dirname+'/krona.html'));
+})
+
 app.get('/samples', function(req, res) {
     files = fs.readdirSync(path.join(__dirname + '/data'));
     contig_files = files.filter(file => file.endsWith('contigs.fasta'));
