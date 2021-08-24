@@ -1,75 +1,56 @@
 <!DOCTYPE html>
 <html>
     <body>
-        <h1>Metagenomics Results</h1>
-        <a href="krona">Classifications Krona Chart</a>
-        <select id="contigs-select" onchange='changegenome()'></select>
+        <h1>JEV Results</h1>
         <div id="viewer"></div>
         <!-- <script src="node_modules/igv/dist/igv.js"></script> -->
         <script src="https://cdn.jsdelivr.net/npm/igv@2.8.6/dist/igv.min.js"></script>
         <script>
+            var reference
             var req = new XMLHttpRequest();
             req.onload = reqlistener;
             function reqlistener(e) {
-                samples = JSON.parse(this.responseText);
-                for (var i = 0; i < samples.length; i++) {
-                    var opt = document.createElement('option');
-                    sample = samples[i].slice(0,-14);
-                    opt.text = sample;
-                    opt.value = sample;
-                    document.getElementById('contigs-select').add(opt);
-                }
+                reference = JSON.parse(this.responseText)[0];
             }
-            req.open('GET', '/samples', false)
+            req.open('GET', '/reference', false)
             req.send()
-            var contig_picker = document.getElementById('contigs-select');
-            var sample = contig_picker.selectedOptions[0].value;
-            igvDiv = document.getElementById('viewer');
-            options = {
-                reference: {
-                    id: sample,
-                    fastaURL: "data/"+sample+".contigs.fasta"
-                },
-                tracks:
-                [
+
+            var samples
+            var re = new XMLHttpRequest();
+            re.onload = relistener;
+            function relistener(e) {
+                samples = JSON.parse(this.responseText);
+            }
+            re.open('GET', '/samples', false)
+            re.send()
+
+            var trks = [];
+
+            for (var i = 0; i < samples.length; i++) {
+                s = samples[i]
+                trks.push(
                     {
                         type: 'alignment',
                         format: 'bam',
-                        url: 'data/'+sample+'.bam',
-                        indexURL: 'data/'+sample+'.bam.bai',
-                        name: sample
+                        url: 'data/'+s,
+                        indexURL: 'data/'+s+'.bai',
+                        name: s.slice(0,-4)
                     }
-                ]
+                )
+            }
+
+            igvDiv = document.getElementById('viewer');
+            options = {
+                reference: {
+                    id: reference.slice(0,-6),
+                    fastaURL: "data/"+reference
+                },
+                tracks: trks
             }
             igv.createBrowser(igvDiv, options).
                 then(function(browser) {
                     igv.browser = browser;
                 });
-            function changegenome() {
-                var contig_picker = document.getElementById('contigs-select');
-                var newsample = contig_picker.selectedOptions[0].value;
-                var newopts = {
-                    reference: {
-                        id: newsample,
-                        fastaURL: "data/"+newsample+".contigs.fasta"
-                    },
-                    tracks:
-                    [
-                        {
-                            type: 'alignment',
-                            format: 'bam',
-                            url: 'data/'+newsample+'.bam',
-                            indexURL: 'data/'+newsample+'.bam.bai',
-                            name: newsample
-                        }
-                    ]
-                }
-                igv.removeAllBrowsers()
-                igv.createBrowser(igvDiv, newopts).
-                then(function(browser) {
-                    igv.browser = browser;
-                });
-            }
         </script>
     </body>
 </html>

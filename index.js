@@ -9,15 +9,18 @@ app.get('/', function (req, res) {
 
 app.use('/data', express.static(__dirname + '/data'));
 
-app.get('/krona', function(req, res) {
-    res.sendFile(path.join(__dirname+'/krona.html'));
-})
-
 app.get('/samples', function(req, res) {
     files = fs.readdirSync(path.join(__dirname + '/data'));
-    contig_files = files.filter(file => file.endsWith('contigs.fasta'));
+    contig_files = files.filter(file => file.endsWith('.bam'));
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(contig_files));
+})
+
+app.get('/reference', function(req, res) {
+    files = fs.readdirSync(path.join(__dirname + '/data'));
+    fasta_files = files.filter(file => file.endsWith('.fasta'));
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(fasta_files))
 })
 
 const port = process.env.PORT || 3000;
